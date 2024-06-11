@@ -1,6 +1,6 @@
 from kafka import KafkaConsumer, KafkaProducer
 import json
-from ocr_service import perform_ocr
+from src.business import perform_ocr
 
 KAFKA_BROKER = "kafka:9092"
 INPUT_TOPIC = "input_topic"

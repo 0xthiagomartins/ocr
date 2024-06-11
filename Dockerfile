@@ -9,11 +9,11 @@ COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src src
-COPY run.sh run.sh
+COPY run.py run.py
 
 RUN apt-get update && \
     apt-get install -y tesseract-ocr && \
     apt-get clean && \
-    chmod +x run.sh
+    python run.py
 
 CMD ["python" "run.py"]
