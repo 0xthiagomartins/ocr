@@ -21,10 +21,15 @@ producer = KafkaProducer(
 
 
 def consume_messages():
-    for message in consumer:
-        image_bytes = bytes(message.value["image"], encoding="utf-8")
-        text = perform_ocr(image_bytes)
-        producer.send(OUTPUT_TOPIC, value={"text": text})
+
+    try:
+        for message in consumer:
+            image_bytes = bytes(message.value["image"], encoding="utf-8")
+            text = perform_ocr(image_bytes)
+            producer.send(OUTPUT_TOPIC, value={"text": text})
+        print("Consuming messages...")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":

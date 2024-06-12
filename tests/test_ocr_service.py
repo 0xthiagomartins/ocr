@@ -1,5 +1,5 @@
 import pytest
-from src.ocr_service import perform_ocr
+from src.service import perform_ocr
 
 
 def test_perform_ocr():
@@ -7,3 +7,7 @@ def test_perform_ocr():
         image_bytes = image_file.read()
         text = perform_ocr(image_bytes)
         assert "expected_text" in text
+
+
+if __name__ == "__main__":
+    pytest.main()
