@@ -3,3 +3,4 @@ Pillow
 kafka-python
 pytest
 six
+confluent_kafka
