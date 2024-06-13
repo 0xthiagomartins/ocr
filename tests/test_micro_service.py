@@ -1,5 +1,6 @@
 import pytest
 from src.service import KafkaService
+import logging
 
 
 def test_kafka_service_consume(caplog):
