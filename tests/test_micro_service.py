@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from confluent_kafka import KafkaError
 from src.service import OCRService
 
@@ -18,7 +18,7 @@ def mock_producer():
 
 @pytest.fixture
 def mock_process_message():
-    with patch("src.service.OCRService.process_message") as mock:
+    with patch("src.ocr_service.OCRService.process_message") as mock:
         yield mock
 
 
@@ -26,7 +26,15 @@ def test_consume_messages_normal(mock_consumer, mock_producer):
     mock_consumer_instance = mock_consumer.return_value
     mock_consumer_instance.poll.return_value = None
 
-    ocr_service = OCRService({}, {}, "test_topic")
+    consumer_conf = {
+        "bootstrap.servers": "localhost:9092",
+        "group.id": "ocr_consumer_group",
+        "auto.offset.reset": "earliest",
+    }
+
+    producer_conf = {"bootstrap.servers": "localhost:9092"}
+
+    ocr_service = OCRService(consumer_conf, producer_conf, "test_topic")
     ocr_service.consume_messages()
 
     mock_consumer_instance.subscribe.assert_called_once_with(["test_topic"])
@@ -57,15 +65,27 @@ def test_consume_messages_with_messages(
     ]
     mock_consumer_instance.poll.side_effect = messages
 
-    ocr_service = OCRService({}, {}, "test_topic")
+    consumer_conf = {
+        "bootstrap.servers": "localhost:9092",
+        "group.id": "ocr_consumer_group",
+        "auto.offset.reset": "earliest",
+    }
+
+    producer_conf = {"bootstrap.servers": "localhost:9092"}
+
+    ocr_service = OCRService(consumer_conf, producer_conf, "test_topic")
     ocr_service.consume_messages()
 
-    expected_calls = [call(b"message1"), call(b"message2"), call(b"message3")]
+    expected_calls = [
+        patch.call(b"message1"),
+        patch.call(b"message2"),
+        patch.call(b"message3"),
+    ]
     assert mock_process_message.call_count == len(messages)
     mock_process_message.assert_has_calls(expected_calls)
 
 
-def test_consume_messages_raises_exception(mock_consumer):
+def test_consume_messages_raises_exception(mock_consumer, mock_producer):
     mock_consumer_instance = mock_consumer.return_value
 
     class MockMessage:
@@ -80,10 +100,18 @@ def test_consume_messages_raises_exception(mock_consumer):
             return self._error
 
     mock_consumer_instance.poll.side_effect = [
-        MockMessage(error=KafkaError(KafkaError._ALL_BROKERS_DOWN))
+        MockMessage(error=MagicMock(code=KafkaError._ALL_BROKERS_DOWN))
     ]
 
-    ocr_service = OCRService({}, {}, "test_topic")
+    consumer_conf = {
+        "bootstrap.servers": "localhost:9092",
+        "group.id": "ocr_consumer_group",
+        "auto.offset.reset": "earliest",
+    }
+
+    producer_conf = {"bootstrap.servers": "localhost:9092"}
+
+    ocr_service = OCRService(consumer_conf, producer_conf, "test_topic")
     ocr_service.consume_messages()
 
     assert mock_consumer_instance.poll.called
@@ -118,7 +146,15 @@ def test_consume_messages_specific_behavior(
     ]
     mock_consumer_instance.poll.side_effect = messages
 
-    ocr_service = OCRService({}, {}, "test_topic")
+    consumer_conf = {
+        "bootstrap.servers": "localhost:9092",
+        "group.id": "ocr_consumer_group",
+        "auto.offset.reset": "earliest",
+    }
+
+    producer_conf = {"bootstrap.servers": "localhost:9092"}
+
+    ocr_service = OCRService(consumer_conf, producer_conf, "test_topic")
     ocr_service.consume_messages()
 
     assert mock_process_message.call_count == len(messages)
